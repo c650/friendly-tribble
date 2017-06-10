@@ -9,10 +9,19 @@ namespace HTMLParser {
 
 	typedef std::runtime_error html_parse_error;
 
+	class BaseElementObject;
+	typedef BaseElementObject* BaseElementObjectPointer;
+
+	class Document {
+		BaseElementObjectPointer root;
+
+	  public:
+		void parse_raw_html(const std::string& raw_html);
+	};
+
 	class BaseElementObject {
 
 	  public:
-		typedef BaseElementObject* BaseElementObjectPointer;
 
 	  private:
 		std::vector<BaseElementObjectPointer> children; /* responsible for cleanup */
@@ -21,6 +30,10 @@ namespace HTMLParser {
 		std::map<std::string,std::string> attributes; /* an element's attributes (e.g., class, id, etc.) */
 
 		std::string tag_name;
+
+		std::string text;
+
+		friend void Documentparse_raw_html(const std::string& raw_html); /* allow this function to do dirty stuff to BaseElementObjects */
 
 	/* PUBLIC METHODS */
 	  public:
@@ -44,11 +57,11 @@ namespace HTMLParser {
 		/* this should throw some error when the HTML is invalid. */
 		BaseElementObject(const std::string& raw_html);
 
-	private:
+	  private:
 
 		BaseElementObject(const std::string& raw_html, BaseElementObjectPointer _parent);
 
-	public:
+	  public:
 
 		/* should allow access to attributes... */
 		std::string& operator[](const std::string&);
