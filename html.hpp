@@ -11,12 +11,16 @@ namespace HTMLParser {
 
 	class BaseElementObject {
 
+	  public:
 		typedef BaseElementObject* BaseElementObjectPointer;
 
+	  private:
 		std::vector<BaseElementObjectPointer> children; /* responsible for cleanup */
 		BaseElementObjectPointer              parent;   /* NOT responsible for cleanup */
 
 		std::map<std::string,std::string> attributes; /* an element's attributes (e.g., class, id, etc.) */
+
+		std::string tag_name;
 
 	/* PUBLIC METHODS */
 	  public:
@@ -40,6 +44,12 @@ namespace HTMLParser {
 		/* this should throw some error when the HTML is invalid. */
 		BaseElementObject(const std::string& raw_html);
 
+	private:
+
+		BaseElementObject(const std::string& raw_html, BaseElementObjectPointer _parent);
+
+	public:
+
 		/* should allow access to attributes... */
 		std::string& operator[](const std::string&);
 
@@ -53,7 +63,8 @@ namespace HTMLParser {
 		BaseElementObject operator/(const BaseElementObject&) = delete;
 		/* += and other sugars shouldn't work with these guys disabled. */
 
-		std::vector<BaseElementObjectPointer>&& css() const;
+		/* This will return all child elements that meet the CSS pattern. */
+		std::vector<BaseElementObjectPointer>&& css(const std::string& pattern) const;
 
 	};
 }
