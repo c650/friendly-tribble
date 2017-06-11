@@ -14,7 +14,6 @@ namespace HTMLParser {
 
 	class Document {
 		BaseElementObjectPointer root;
-		BaseElementObjectPointer parse_raw_html(const std::string& raw_html);
 
 	public:
 
@@ -25,6 +24,7 @@ namespace HTMLParser {
 		Document(Document& other) = delete;
 		Document& operator=(Document& other) = delete;
 
+		BaseElementObjectPointer parse_raw_html(const std::string& raw_html);
 	};
 
 	class BaseElementObject {
@@ -33,19 +33,18 @@ namespace HTMLParser {
 		std::vector<BaseElementObjectPointer> children; /* responsible for cleanup */
 		BaseElementObjectPointer              parent;   /* NOT responsible for cleanup */
 
-		std::map<std::string,std::string> attributes; /* an element's attributes (e.g., class, id, etc.) */
+		std::unordered_map<std::string,std::string> attributes; /* an element's attributes (e.g., class, id, etc.) */
 
 		std::string tag_name;
 
 		std::string text;
 
 		/* allow this function to do dirty stuff to BaseElementObjects */
-		friend void Document::parse_raw_html(const std::string& raw_html);
+		friend BaseElementObjectPointer Document::parse_raw_html(const std::string& raw_html);
 
 	/* PUBLIC METHODS */
 	  public:
 
-		BaseElementObject();
 		~BaseElementObject();
 
 		/*
@@ -82,7 +81,7 @@ namespace HTMLParser {
 		/* += and other sugars shouldn't work with these guys disabled. */
 
 		/* This will return all child elements that meet the CSS pattern. */
-		std::vector<BaseElementObjectPointer>&& css(const std::string& pattern) const;
+		std::vector<BaseElementObjectPointer> css(const std::string& pattern) const;
 
 		void add_child(BaseElementObjectPointer child);
 

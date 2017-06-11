@@ -9,19 +9,21 @@
 
 namespace hp = HTMLParser;
 
-hp::BaseElementObject::BaseElementObject();
-hp::BaseElementObject::~BaseElementObject();
-
-/* this should throw some error when the HTML is invalid. */
-hp::BaseElementObject::BaseElementObject(const std::string& raw_html)
-	: hp::BaseElementObject::BaseElementObject(raw_html, null) {}
-
-hp::BaseElementObject::BaseElementObject(const std::string& raw_html, BaseElementObjectPointer _parent)
-: parent(_parent) {
-	parse_raw_html(raw_html);
+hp::BaseElementObject::~BaseElementObject() {
+	for (BaseElementObjectPointer& child : children) {
+		delete child;
+		child = nullptr;
+	}
 }
 
-std::vector<hp::BaseElementObjectPointer>&& hp::BaseElementObject::css(const std::string& pattern) const {
+/* this should throw some error when the HTML is invalid. */
+hp::BaseElementObject::BaseElementObject(const std::string& tag_name, const std::string& text)
+	: hp::BaseElementObject::BaseElementObject(tag_name, text, nullptr) {}
+
+hp::BaseElementObject::BaseElementObject(const std::string& _tag_name, const std::string& _text, BaseElementObjectPointer _parent)
+: tag_name(_tag_name), text(_text), parent(_parent) {}
+
+std::vector<hp::BaseElementObjectPointer> hp::BaseElementObject::css(const std::string& pattern) const {
 	std::vector<BaseElementObjectPointer> results; /* all matches to pattern go here. */
 
 	// do all the stuff.
@@ -42,8 +44,10 @@ hp::BaseElementObject::operator[](const std::string& attr) const  {
 }
 
 void hp::BaseElementObject::add_child(BaseElementObjectPointer child) {
-	if (child != nullptr) /* no sense in adding null children. */
+	if (child != nullptr) {/* no sense in adding null children. */
 		children.push_back(child);
+		child->set_parent(this);
+	}
 }
 
 void hp::BaseElementObject::set_parent(hp::BaseElementObjectPointer parent) {
