@@ -14,14 +14,20 @@ namespace HTMLParser {
 
 	class Document {
 		BaseElementObjectPointer root;
-
-	  public:
 		BaseElementObjectPointer parse_raw_html(const std::string& raw_html);
+
+	public:
+
+		Document(const std::string& raw_html);
+
+		Document(BaseElementObjectPointer root);
+
+		Document(Document& other) = delete;
+		Document& operator=(Document& other) = delete;
+
 	};
 
 	class BaseElementObject {
-
-	  public:
 
 	  private:
 		std::vector<BaseElementObjectPointer> children; /* responsible for cleanup */
@@ -34,7 +40,7 @@ namespace HTMLParser {
 		std::string text;
 
 		/* allow this function to do dirty stuff to BaseElementObjects */
-		friend void Documentparse_raw_html(const std::string& raw_html);
+		friend void Document::parse_raw_html(const std::string& raw_html);
 
 	/* PUBLIC METHODS */
 	  public:
@@ -51,13 +57,11 @@ namespace HTMLParser {
 		BaseElementObject(BaseElementObject& other) = delete;
 		BaseElementObject& operator=(BaseElementObject& other) = delete;
 
-
-		/* this should throw some error when the HTML is invalid. */
-		BaseElementObject(const std::string& raw_html);
+		BaseElementObject(const std::string& tag_name, const std::string& text);
 
 	  private:
 
-		BaseElementObject(const std::string& raw_html, BaseElementObjectPointer _parent);
+		BaseElementObject(const std::string& tag_name, const std::string& text, BaseElementObjectPointer _parent);
 
 	  public:
 
@@ -66,6 +70,9 @@ namespace HTMLParser {
 
 		/* const access involves making*/
 		const std::string& operator[](const std::string& attr) const;
+
+		/* checks if attribute exists... */
+		bool has_attribute(const std::string& attr) const;
 
 		/* Arithmetic on elements is undefined. */
 		BaseElementObject operator+(const BaseElementObject&) = delete;
