@@ -8,7 +8,6 @@
 #include <utility>
 
 namespace hp = HTMLParser;
-namespace hpbeo = hp::BaseElementObject;
 
 /* incomplete garbage */
 hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw_html) {

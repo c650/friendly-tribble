@@ -8,4 +8,3 @@
 #include <utility>
 
 namespace hp = HTMLParser;
-namespace hpdoc = hp::Document;
