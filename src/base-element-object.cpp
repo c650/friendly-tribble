@@ -40,7 +40,7 @@ hp::BaseElementObject::operator[](const std::string& attr) {
 /* const access involves making*/
 const std::string&
 hp::BaseElementObject::operator[](const std::string& attr) const  {
-	return attributes[attr];
+	return attributes.at(attr);
 }
 
 void hp::BaseElementObject::add_child(BaseElementObjectPointer child) {
