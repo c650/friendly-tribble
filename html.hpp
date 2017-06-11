@@ -16,7 +16,7 @@ namespace HTMLParser {
 		BaseElementObjectPointer root;
 
 	  public:
-		void parse_raw_html(const std::string& raw_html);
+		BaseElementObjectPointer parse_raw_html(const std::string& raw_html);
 	};
 
 	class BaseElementObject {
@@ -33,7 +33,8 @@ namespace HTMLParser {
 
 		std::string text;
 
-		friend void Documentparse_raw_html(const std::string& raw_html); /* allow this function to do dirty stuff to BaseElementObjects */
+		/* allow this function to do dirty stuff to BaseElementObjects */
+		friend void Documentparse_raw_html(const std::string& raw_html);
 
 	/* PUBLIC METHODS */
 	  public:
@@ -50,9 +51,6 @@ namespace HTMLParser {
 		BaseElementObject(BaseElementObject& other) = delete;
 		BaseElementObject& operator=(BaseElementObject& other) = delete;
 
-		BaseElementObject(BaseElementObject&& other);
-
-		BaseElementObject& operator=(BaseElementObject&& other);
 
 		/* this should throw some error when the HTML is invalid. */
 		BaseElementObject(const std::string& raw_html);
@@ -64,10 +62,10 @@ namespace HTMLParser {
 	  public:
 
 		/* should allow access to attributes... */
-		std::string& operator[](const std::string&);
+		std::string& operator[](const std::string& attr);
 
 		/* const access involves making*/
-		const std::string& operator[](const std::string&) const;
+		const std::string& operator[](const std::string& attr) const;
 
 		/* Arithmetic on elements is undefined. */
 		BaseElementObject operator+(const BaseElementObject&) = delete;
@@ -79,6 +77,13 @@ namespace HTMLParser {
 		/* This will return all child elements that meet the CSS pattern. */
 		std::vector<BaseElementObjectPointer>&& css(const std::string& pattern) const;
 
+		void add_child(BaseElementObjectPointer child);
+
+		void set_parent(BaseElementObjectPointer parent);
+		const BaseElementObjectPointer get_parent(void) const;
+
+		void set_tag_name(const std::string& name);
+		const std::string& get_tag_name(void) const;
 	};
 }
 
