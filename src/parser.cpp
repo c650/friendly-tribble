@@ -30,10 +30,6 @@ hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw
 	if (beginnings.empty()) {
 		return nullptr;
 	}
-	                                /* checks if tags are of same type. */
-	if (beginnings.size() == 1 && ends.front().second[1] == beginnings.front().second[1]) {
-
-	}
 
 	size_t req = 1;
 	std::pair<size_t, std::smatch> first = beginnings.front();
