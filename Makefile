@@ -7,7 +7,7 @@ CFLAGS= --std=c++17
 SRC= ./src/*.cpp
 OUT= ./bin/html-parser.out
 
-OPTIMIZE= -Ofast # speed.
+OPTIMIZE= -Ofast #-Wall -Werror # speed.
 
 build: ${SRC}
 	${CC} ${OPTIMIZE} ${CFLAGS} -o ${OUT} ${SRC} #${LDFLAGS} ${LDLIBS}
