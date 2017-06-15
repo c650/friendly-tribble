@@ -4,7 +4,7 @@ CFLAGS= --std=c++17
 # LDLIBS= -lcurl -lcrypto -lssl -lpthread -ldl
 # LDFLAGS= -L/usr/lib/x86_64-linux-gnu
 
-SRC= ./src/*.cpp
+SRC= ./src/*.cpp ./main.cpp
 OUT= ./bin/html-parser.out
 
 OPTIMIZE= -Ofast #-Wall -Werror # speed.

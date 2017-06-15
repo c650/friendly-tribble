@@ -7,21 +7,24 @@
 #include <regex>
 #include <utility>
 
+#include <iostream>
+
 namespace hp = HTMLParser;
 
 struct match_type {
-	size_t index;
-	std::smatch match;
+	size_t index, len;
+	std::string tag_name;
+	std::string attributes;
 	bool is_beginning_tag;
 };
 
 static std::vector<match_type> do_regex_search(std::string s, const std::regex& pattern, bool is_beginning_tag);
 
-static std::vector<hp::BaseElementObjectPointer> process_tags(std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end);
+static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end);
 
 /* incomplete garbage */
 hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw_html) {
-	const static std::regex start_tag_regex("<([a-zA-Z]+[1-6]?).*>");
+	const static std::regex start_tag_regex("<([a-zA-Z]+[1-6]?)([^>])*>"); // change from .* to [^>]* because I'm dumb.
 	const static std::regex   end_tag_regex("</([a-zA-Z]+[1-6]?)>");
 
 	/* this can be much better than it is now. */
@@ -29,6 +32,7 @@ hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw
 	std::vector<match_type> ends       = do_regex_search(raw_html,  end_tag_regex, false);
 
 	if (beginnings.size() != ends.size()) {
+		std::cout << beginnings.size() << " " << ends.size() << '\n';
 		throw html_parse_error("Open/closing tags unmatched.");
 	}
 
@@ -37,16 +41,15 @@ hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw
 		return nullptr;
 	}
 
-	BaseElementObjectPointer element = nullptr;
-
 	std::vector<match_type> all = beginnings;
 	all.insert(all.end(), ends.begin(), ends.end());
 
 	std::sort(all.begin(), all.end(), [](const match_type& a, const match_type& b){return a.index < b.index;});
+	for (auto& m : all) {
+		std::cout << raw_html.substr(m.index, m.len) << '\n';
+	}
 
-
-
-	return element;
+	return process_tags(raw_html, all.begin(), all.end()).front();
 }
 
 static std::vector<match_type> do_regex_search(std::string s, const std::regex& pattern, bool is_beginning_tag) {
@@ -55,7 +58,8 @@ static std::vector<match_type> do_regex_search(std::string s, const std::regex& 
 	size_t offset = 0;
 	std::smatch match;
 	while (std::regex_search(s, match, pattern)) {
-		results.push_back({ offset + match.prefix().length(), match, is_beginning_tag });
+		results.push_back({ offset + match.prefix().length(), match.str().length(), match[1].str(), is_beginning_tag ? match[2].str() : "", is_beginning_tag });
+		std::cout << "Found tag: " << match.str() << " at: " << results.back().index << '\n';
 
 		offset += match.prefix().length() + match[0].length();
 
@@ -65,13 +69,13 @@ static std::vector<match_type> do_regex_search(std::string s, const std::regex& 
 	return results;
 };
 
-static std::vector<hp::BaseElementObjectPointer> process_tags(std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end) {
+static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end) {
 	std::vector<hp::BaseElementObjectPointer> top_level_elements;
 
 	auto start = begin;
 	auto finish = end-1;
 
-	int count = 0;
+	int count = 1;
 
 	while (start != end) {
 		if (!start->is_beginning_tag) {
@@ -88,12 +92,15 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(std::vector<match_
 				break;
 		}
 
+		std::cout << "start tag: " << start->tag_name << " and end tag: " << finish->tag_name << "\n";
+
 		// do math for start to finish of entire element and stuff within
-		size_t length = finish->index - start->index - start->match[0].length();
-		top_level_elements.push_back(new hp::BaseElementObject(start->match[1], start->match.suffix().str().substr(0, length)));
+		size_t length = finish->index - start->index - start->len;
+		std::cout << "length = " << length << '\n';
+		top_level_elements.push_back(new hp::BaseElementObject(start->tag_name, raw_html.substr(start->index + start->len, length)));
 
 		// take care of element's children
-		for (hp::BaseElementObjectPointer elem : process_tags(start+1, finish))
+		for (hp::BaseElementObjectPointer elem : process_tags(raw_html, start+1, finish))
 			top_level_elements.back()->add_child(elem);
 
 		// TODO: Read attributes.
