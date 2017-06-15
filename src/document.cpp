@@ -8,3 +8,7 @@
 #include <utility>
 
 namespace hp = HTMLParser;
+
+hp::Document::Document(const std::string& raw_html) : Document(parse_raw_html(raw_html)) {}
+
+hp::Document::Document(BaseElementObjectPointer _root) : root(_root) {}
