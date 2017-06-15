@@ -43,6 +43,15 @@ hp::BaseElementObject::operator[](const std::string& attr) const  {
 	return attributes.at(attr);
 }
 
+bool hp::BaseElementObject::has_attribute(const std::string& attr) const {
+	try {
+		attributes.at(attr);
+	} catch (...) {
+		return false;
+	}
+	return true;
+}
+
 void hp::BaseElementObject::add_child(BaseElementObjectPointer child) {
 	if (child != nullptr) {/* no sense in adding null children. */
 		children.push_back(child);
