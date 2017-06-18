@@ -26,7 +26,6 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 template<class BidirIt>
 static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first, BidirIt last);
 
-/* incomplete garbage */
 hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw_html) {
 	const static std::regex start_tag_regex("<([a-zA-Z]+[1-6]?)([^>])*>"); // change from .* to [^>]* because I'm dumb.
 	const static std::regex   end_tag_regex("</([a-zA-Z]+[1-6]?)>");
