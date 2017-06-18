@@ -19,13 +19,16 @@ namespace HTMLParser {
 
 		Document(const std::string& raw_html);
 
-		BaseElementObjectPointer parse_raw_html(const std::string& raw_html);
 
 		Document(Document& other) = delete;
 		Document& operator=(Document& other) = delete;
 
 	private:
 		Document(BaseElementObjectPointer root);
+
+	protected:
+		friend BaseElementObject;
+		BaseElementObjectPointer parse_raw_html(const std::string& raw_html);
 	};
 
 	class BaseElementObject {
