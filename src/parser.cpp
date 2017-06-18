@@ -1,4 +1,5 @@
 #include "./include/html.hpp"
+#include "./include/helpers.hpp"
 #include "./include/debug.hpp"
 
 #include <vector>
@@ -26,9 +27,6 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 
 template<class BidirIt>
 static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first, BidirIt last);
-
-template<class BidirIt, class Func>
-static void general_regex_search(BidirIt first, BidirIt last, const std::regex& pattern, Func f);
 
 hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw_html) {
 	const static std::regex start_tag_regex("<([a-zA-Z]+[1-6]?)([^>])*>"); // change from .* to [^>]* because I'm dumb.
@@ -131,16 +129,4 @@ static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first
 	});
 
 	return attributes;
-}
-
-template<class BidirIt, class Func>
-static void general_regex_search(BidirIt first, BidirIt last, const std::regex& pattern, Func f) {
-	std::smatch match;
-	size_t offset = 0;
-	while (std::regex_search(first + offset, last, match, pattern)) {
-
-		f(match, offset);
-
-		offset += match.position() + match.length();
-	}
 }
