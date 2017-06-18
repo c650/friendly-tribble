@@ -74,3 +74,7 @@ void hp::BaseElementObject::set_tag_name(const std::string& name) {
 const std::string& hp::BaseElementObject::get_tag_name(void) const {
 	return this->tag_name;
 }
+
+void hp::BaseElementObject::set_attributes(std::unordered_map<std::string,std::string>&& new_attrs) {
+	this->attributes = new_attrs;
+}

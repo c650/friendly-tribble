@@ -22,6 +22,9 @@ static std::vector<match_type> do_regex_search(std::string s, const std::regex& 
 
 static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end);
 
+template<class BidirIt>
+static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first, BidirIt last);
+
 /* incomplete garbage */
 hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw_html) {
 	const static std::regex start_tag_regex("<([a-zA-Z]+[1-6]?)([^>])*>"); // change from .* to [^>]* because I'm dumb.
@@ -104,10 +107,31 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 			top_level_elements.back()->add_child(elem);
 
 		// TODO: Read attributes.
+		top_level_elements.back()->set_attributes(scan_attributes(raw_html.begin() + start->index, raw_html.begin() + start->index + start->len));
 
+		if (top_level_elements.back()->has_attribute("class")) {
+			std::cout << "\thas class: " << (*top_level_elements.back())["class"] << '\n';
+		}
 
 		start = finish + 1;
 	}
 
 	return top_level_elements;
+}
+
+template<class BidirIt>
+static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first, BidirIt last) {
+	static const std::regex attr_pattern("(\\S+)=\"([^\"]*)\"");
+
+	std::unordered_map<std::string, std::string> attributes;
+
+	std::smatch match;
+
+	int offset = 0;
+	while (std::regex_search(first + offset, last, match, attr_pattern)) {
+		attributes[match[1]] = match[2];
+		offset += match.position() + match.length();
+	}
+
+	return attributes;
 }

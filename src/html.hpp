@@ -91,6 +91,8 @@ namespace HTMLParser {
 
 		void set_tag_name(const std::string& name);
 		const std::string& get_tag_name(void) const;
+
+		void set_attributes(std::unordered_map<std::string,std::string>&& new_attrs);
 	};
 }
 
