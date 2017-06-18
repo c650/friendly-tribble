@@ -1,4 +1,5 @@
 #include "./html.hpp"
+#include "./debug.hpp"
 
 #include <vector>
 #include <queue>
@@ -62,7 +63,8 @@ static std::vector<match_type> do_regex_search(std::string s, const std::regex& 
 	std::smatch match;
 	while (std::regex_search(s, match, pattern)) {
 		results.push_back({ offset + match.prefix().length(), match.str().length(), match[1].str(), is_beginning_tag ? match[2].str() : "", is_beginning_tag });
-		std::cout << "Found tag: " << match.str() << " at: " << results.back().index << '\n';
+
+		debug_print("Found tag: " + match.str() + " at: " + std::to_string(results.back().index) + '\n');
 
 		offset += match.prefix().length() + match[0].length();
 
@@ -95,11 +97,13 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 				break;
 		}
 
-		std::cout << "start tag: " << start->tag_name << " and end tag: " << finish->tag_name << "\n";
+		debug_print("start tag: " + start->tag_name + " and end tag: " + finish->tag_name + "\n");
 
 		// do math for start to finish of entire element and stuff within
 		size_t length = finish->index - start->index - start->len;
-		std::cout << "length = " << length << '\n';
+
+		debug_print("length = " + std::to_string(length) + '\n');
+
 		top_level_elements.push_back(new hp::BaseElementObject(start->tag_name, raw_html.substr(start->index + start->len, length)));
 
 		// take care of element's children
@@ -110,7 +114,7 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 		top_level_elements.back()->set_attributes(scan_attributes(raw_html.begin() + start->index, raw_html.begin() + start->index + start->len));
 
 		if (top_level_elements.back()->has_attribute("class")) {
-			std::cout << "\thas class: " << (*top_level_elements.back())["class"] << '\n';
+			debug_print("\thas class: " + (*top_level_elements.back())["class"] + '\n');
 		}
 
 		start = finish + 1;

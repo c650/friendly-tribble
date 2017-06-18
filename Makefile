@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS= --std=c++17
+CFLAGS= --std=c++17 -DDEBUG_PRINTOUT
 
 # LDLIBS= -lcurl -lcrypto -lssl -lpthread -ldl
 # LDFLAGS= -L/usr/lib/x86_64-linux-gnu
