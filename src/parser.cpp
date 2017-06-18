@@ -20,20 +20,23 @@ struct match_type {
 };
 
 template<class BidirIt>
-static std::vector<match_type> do_regex_search(BidirIt first, BidirIt last, const std::regex& pattern, bool is_beginning_tag);
+static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, const std::regex& pattern, bool is_beginning_tag);
 
 static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end);
 
 template<class BidirIt>
 static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first, BidirIt last);
 
+template<class BidirIt, class Func>
+static void general_regex_search(BidirIt first, BidirIt last, const std::regex& pattern, Func f);
+
 hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw_html) {
 	const static std::regex start_tag_regex("<([a-zA-Z]+[1-6]?)([^>])*>"); // change from .* to [^>]* because I'm dumb.
 	const static std::regex   end_tag_regex("</([a-zA-Z]+[1-6]?)>");
 
 	/* this can be much better than it is now. */
-	std::vector<match_type> beginnings = do_regex_search(raw_html.begin(), raw_html.end(), start_tag_regex, true);
-	std::vector<match_type> ends       = do_regex_search(raw_html.begin(), raw_html.end(),  end_tag_regex, false);
+	std::vector<match_type> beginnings = find_all_tags(raw_html.begin(), raw_html.end(), start_tag_regex, true);
+	std::vector<match_type> ends       = find_all_tags(raw_html.begin(), raw_html.end(),  end_tag_regex, false);
 
 	if (beginnings.size() != ends.size()) {
 		std::cout << beginnings.size() << " " << ends.size() << '\n';
@@ -57,19 +60,13 @@ hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw
 }
 
 template<class BidirIt>
-static std::vector<match_type> do_regex_search(BidirIt first, BidirIt last, const std::regex& pattern, bool is_beginning_tag) {
+static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, const std::regex& pattern, bool is_beginning_tag) {
 	std::vector<match_type> results;
 
-	size_t offset = 0, str_offset = 0;
-	std::smatch match;
-
-	while (std::regex_search(first + offset, last, match, pattern)) {
+	general_regex_search(first, last, pattern, [is_beginning_tag, &results](const std::smatch& match, const size_t& offset){
 		results.push_back({ offset + match.prefix().length(), match.str().length(), match[1].str(), is_beginning_tag ? match[2].str() : "", is_beginning_tag });
-
 		debug_print("Found tag: " + match.str() + " at: " + std::to_string(results.back().index) + '\n');
-
-		offset += match.prefix().length() + match[0].length();
-	}
+	});
 
 	return results;
 };
@@ -129,13 +126,21 @@ static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first
 
 	std::unordered_map<std::string, std::string> attributes;
 
-	std::smatch match;
-
-	int offset = 0;
-	while (std::regex_search(first + offset, last, match, attr_pattern)) {
+	general_regex_search(first, last, attr_pattern, [&attributes](const std::smatch& match, const size_t& offset){
 		attributes[match[1]] = match[2];
-		offset += match.position() + match.length();
-	}
+	});
 
 	return attributes;
+}
+
+template<class BidirIt, class Func>
+static void general_regex_search(BidirIt first, BidirIt last, const std::regex& pattern, Func f) {
+	std::smatch match;
+	size_t offset = 0;
+	while (std::regex_search(first + offset, last, match, pattern)) {
+
+		f(match, offset);
+
+		offset += match.position() + match.length();
+	}
 }
