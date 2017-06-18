@@ -19,7 +19,8 @@ struct match_type {
 	bool is_beginning_tag;
 };
 
-static std::vector<match_type> do_regex_search(std::string s, const std::regex& pattern, bool is_beginning_tag);
+template<class BidirIt>
+static std::vector<match_type> do_regex_search(BidirIt first, BidirIt last, const std::regex& pattern, bool is_beginning_tag);
 
 static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end);
 
@@ -31,8 +32,8 @@ hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw
 	const static std::regex   end_tag_regex("</([a-zA-Z]+[1-6]?)>");
 
 	/* this can be much better than it is now. */
-	std::vector<match_type> beginnings = do_regex_search(raw_html, start_tag_regex, true);
-	std::vector<match_type> ends       = do_regex_search(raw_html,  end_tag_regex, false);
+	std::vector<match_type> beginnings = do_regex_search(raw_html.begin(), raw_html.end(), start_tag_regex, true);
+	std::vector<match_type> ends       = do_regex_search(raw_html.begin(), raw_html.end(),  end_tag_regex, false);
 
 	if (beginnings.size() != ends.size()) {
 		std::cout << beginnings.size() << " " << ends.size() << '\n';
@@ -55,19 +56,19 @@ hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw
 	return process_tags(raw_html, all.begin(), all.end()).front();
 }
 
-static std::vector<match_type> do_regex_search(std::string s, const std::regex& pattern, bool is_beginning_tag) {
+template<class BidirIt>
+static std::vector<match_type> do_regex_search(BidirIt first, BidirIt last, const std::regex& pattern, bool is_beginning_tag) {
 	std::vector<match_type> results;
 
-	size_t offset = 0;
+	size_t offset = 0, str_offset = 0;
 	std::smatch match;
-	while (std::regex_search(s, match, pattern)) {
+
+	while (std::regex_search(first + offset, last, match, pattern)) {
 		results.push_back({ offset + match.prefix().length(), match.str().length(), match[1].str(), is_beginning_tag ? match[2].str() : "", is_beginning_tag });
 
 		debug_print("Found tag: " + match.str() + " at: " + std::to_string(results.back().index) + '\n');
 
 		offset += match.prefix().length() + match[0].length();
-
-		s = match.suffix();
 	}
 
 	return results;
