@@ -18,10 +18,11 @@ struct match_type {
 	std::string tag_name;
 	std::string attributes;
 	bool is_beginning_tag;
+	bool is_lone_tag; /* e.g., <img /> */
 };
 
 template<class BidirIt>
-static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, const std::regex& pattern, bool is_beginning_tag);
+static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, bool is_beginning_tag);
 
 static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end);
 
@@ -29,17 +30,9 @@ template<class BidirIt>
 static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first, BidirIt last);
 
 hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw_html) {
-	const static std::regex start_tag_regex("<([a-zA-Z]+[1-6]?)([^>])*>"); // change from .* to [^>]* because I'm dumb.
-	const static std::regex   end_tag_regex("</([a-zA-Z]+[1-6]?)>");
 
-	/* this can be much better than it is now. */
-	std::vector<match_type> beginnings = find_all_tags(raw_html.begin(), raw_html.end(), start_tag_regex, true);
-	std::vector<match_type> ends       = find_all_tags(raw_html.begin(), raw_html.end(),  end_tag_regex, false);
-
-	if (beginnings.size() != ends.size()) {
-		std::cout << beginnings.size() << " " << ends.size() << '\n';
-		throw html_parse_error("Open/closing tags unmatched.");
-	}
+	std::vector<match_type> beginnings = find_all_tags(raw_html.begin(), raw_html.end(), true);
+	std::vector<match_type> ends       = find_all_tags(raw_html.begin(), raw_html.end(), false);
 
 	/* nothing else to parse...? */
 	if (beginnings.empty()) {
@@ -58,12 +51,24 @@ hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw
 }
 
 template<class BidirIt>
-static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, const std::regex& pattern, bool is_beginning_tag) {
+static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, bool is_beginning_tag) {
+	const static std::regex start_tag_regex("<([a-zA-Z]+[1-6]?)\\s*([^>]*)>"); /* change from .* to [^>]* because I'm dumb. */
+	const static std::regex   end_tag_regex("</([a-zA-Z]+[1-6]?)>");
+
+	const std::regex& pattern = is_beginning_tag ? start_tag_regex : end_tag_regex;
+
 	std::vector<match_type> results;
 
 	general_regex_search(first, last, pattern, [is_beginning_tag, &results](const std::smatch& match, const size_t& offset){
-		results.push_back({ offset + match.prefix().length(), match.str().length(), match[1].str(), is_beginning_tag ? match[2].str() : "", is_beginning_tag });
+		results.push_back({ offset + match.prefix().length(), match.str().length(), match[1].str(), is_beginning_tag ? match[2].str() : "", is_beginning_tag, is_beginning_tag && match[2].str().back() == '/'});
 		debug_print("Found tag: " + match.str() + " at: " + std::to_string(results.back().index) + '\n');
+		if (results.back().is_lone_tag)
+			debug_print("\tTag is a lone tag.\n");
+
+		debug_print("Submatches:\n");
+		for (size_t i = 0; i < match.size(); ++i) {
+			debug_print("\t" + std::to_string(i+1) + " " + match[i].str() + "\n");
+		}
 	});
 
 	return results;
@@ -82,35 +87,47 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 			++start;
 			continue;
 		}
-		for (finish = start+1; finish != end; ++finish) {
-			if (!finish->is_beginning_tag) {
-				--count;
-			} else {
-				++count;
+
+		/* don't need to find other tag if the tag is_lone_tag */
+		if (start->is_lone_tag) {
+			finish = start;
+		} else {
+			for (finish = start+1; finish != end; ++finish) {
+				if (finish->is_lone_tag) continue;
+				if (!finish->is_beginning_tag) {
+					--count;
+				} else {
+					++count;
+				}
+				if (count <= 0)
+					break;
 			}
-			if (count <= 0)
-				break;
 		}
 
 		debug_print("start tag: " + start->tag_name + " and end tag: " + finish->tag_name + "\n");
 
 		// do math for start to finish of entire element and stuff within
-		size_t length = finish->index - start->index - start->len;
+		size_t length;
+		if (start != finish)
+		 	length = finish->index - start->index - start->len;
+		else
+			length = 0;
 
 		debug_print("length = " + std::to_string(length) + '\n');
 
 		top_level_elements.push_back(new hp::BaseElementObject(start->tag_name, raw_html.substr(start->index + start->len, length)));
 
-		// take care of element's children
-		for (hp::BaseElementObjectPointer elem : process_tags(raw_html, start+1, finish))
-			top_level_elements.back()->add_child(elem);
-
-		// TODO: Read attributes.
+		/* scan attributes */
 		top_level_elements.back()->set_attributes(scan_attributes(raw_html.begin() + start->index, raw_html.begin() + start->index + start->len));
 
 		if (top_level_elements.back()->has_attribute("class")) {
 			debug_print("\thas class: " + (*top_level_elements.back())["class"] + '\n');
 		}
+
+		/* take care of element's children */
+		if (!start->is_lone_tag)
+			for (hp::BaseElementObjectPointer elem : process_tags(raw_html, start+1, finish))
+				top_level_elements.back()->add_child(elem);
 
 		start = finish + 1;
 	}
