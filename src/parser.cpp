@@ -34,13 +34,13 @@ struct match_type {
 template<class BidirIt>
 static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, bool is_beginning_tag);
 
-static std::vector<hp::BaseElementObjectPointer>
+static std::vector<hp::ElementPointer>
 process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end);
 
 template<class BidirIt>
 static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first, BidirIt last);
 
-hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw_html) {
+hp::ElementPointer hp::Document::parse_raw_html(const std::string& raw_html) {
 
 	std::vector<match_type> beginnings = find_all_tags(raw_html.begin(), raw_html.end(), true);
 	std::vector<match_type> ends       = find_all_tags(raw_html.begin(), raw_html.end(), false);
@@ -94,8 +94,8 @@ static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, bool i
 	return results;
 };
 
-static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end) {
-	std::vector<hp::BaseElementObjectPointer> top_level_elements;
+static std::vector<hp::ElementPointer> process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end) {
+	std::vector<hp::ElementPointer> top_level_elements;
 
 	auto start = begin;
 	auto finish = end;
@@ -133,14 +133,14 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 		debug_print("length = " + std::to_string(length) + '\n');
 
 		/* create the new element. */
-		hp::BaseElementObjectPointer element = new hp::BaseElementObject(start->tag_name, raw_html.substr(start->index + start->len, length));
+		hp::ElementPointer element = new hp::Element(start->tag_name, raw_html.substr(start->index + start->len, length));
 
 		/* scan attributes */
 		element->set_attributes(scan_attributes(raw_html.begin() + start->index, raw_html.begin() + start->index + start->len));
 
 		/* take care of element's children */
 		if (!start->is_lone_tag) {
-			for (hp::BaseElementObjectPointer elem : process_tags(raw_html, start+1, finish)) {
+			for (hp::ElementPointer elem : process_tags(raw_html, start+1, finish)) {
 				element->add_child(elem);
 			}
 		}

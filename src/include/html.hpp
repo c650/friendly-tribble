@@ -13,11 +13,11 @@ namespace HTMLParser {
 
 	typedef std::runtime_error html_parse_error;
 
-	class BaseElementObject;
-	typedef BaseElementObject* BaseElementObjectPointer;
+	class Element;
+	typedef Element* ElementPointer;
 
 	class Document {
-		BaseElementObjectPointer root;
+		ElementPointer root;
 
 	public:
 
@@ -28,18 +28,18 @@ namespace HTMLParser {
 		Document& operator=(Document& other) = delete;
 
 	private:
-		Document(BaseElementObjectPointer root);
+		Document(ElementPointer root);
 
 	protected:
-		friend BaseElementObject;
-		BaseElementObjectPointer parse_raw_html(const std::string& raw_html);
+		friend Element;
+		ElementPointer parse_raw_html(const std::string& raw_html);
 	};
 
-	class BaseElementObject {
+	class Element {
 
 	  private:
-		std::vector<BaseElementObjectPointer> children; /* responsible for cleanup */
-		BaseElementObjectPointer              parent;   /* NOT responsible for cleanup */
+		std::vector<ElementPointer> children; /* responsible for cleanup */
+		ElementPointer              parent;   /* NOT responsible for cleanup */
 
 		std::unordered_map<std::string,std::string> attributes; /* an element's attributes (e.g., class, id, etc.) */
 
@@ -47,13 +47,13 @@ namespace HTMLParser {
 
 		std::string text;
 
-		/* allow this function to do dirty stuff to BaseElementObjects */
-		friend BaseElementObjectPointer Document::parse_raw_html(const std::string& raw_html);
+		/* allow this function to do dirty stuff to Elements */
+		friend ElementPointer Document::parse_raw_html(const std::string& raw_html);
 
 	/* PUBLIC METHODS */
 	  public:
 
-		~BaseElementObject();
+		~Element();
 
 		/*
 			No copy-constructing because then two copies of the same element
@@ -61,14 +61,14 @@ namespace HTMLParser {
 
 			NOTE: May change later...
 		*/
-		BaseElementObject(BaseElementObject& other) = delete;
-		BaseElementObject& operator=(BaseElementObject& other) = delete;
+		Element(Element& other) = delete;
+		Element& operator=(Element& other) = delete;
 
-		BaseElementObject(const std::string& tag_name, const std::string& text);
+		Element(const std::string& tag_name, const std::string& text);
 
 	  private:
 
-		BaseElementObject(const std::string& tag_name, const std::string& text, BaseElementObjectPointer _parent);
+		Element(const std::string& tag_name, const std::string& text, ElementPointer _parent);
 
 	  public:
 
@@ -82,19 +82,19 @@ namespace HTMLParser {
 		bool has_attribute(const std::string& attr) const;
 
 		/* Arithmetic on elements is undefined. */
-		BaseElementObject operator+(const BaseElementObject&) = delete;
-		BaseElementObject operator-(const BaseElementObject&) = delete;
-		BaseElementObject operator*(const BaseElementObject&) = delete;
-		BaseElementObject operator/(const BaseElementObject&) = delete;
+		Element operator+(const Element&) = delete;
+		Element operator-(const Element&) = delete;
+		Element operator*(const Element&) = delete;
+		Element operator/(const Element&) = delete;
 		/* += and other sugars shouldn't work with these guys disabled. */
 
 		/* This will return all child elements that meet the CSS pattern. */
-		std::vector<BaseElementObjectPointer> css(const std::string& pattern) const;
+		std::vector<ElementPointer> css(const std::string& pattern) const;
 
-		void add_child(BaseElementObjectPointer child);
+		void add_child(ElementPointer child);
 
-		void set_parent(BaseElementObjectPointer parent);
-		const BaseElementObjectPointer get_parent(void) const;
+		void set_parent(ElementPointer parent);
+		const ElementPointer get_parent(void) const;
 
 		void set_tag_name(const std::string& name);
 		const std::string& get_tag_name(void) const;
