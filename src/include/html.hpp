@@ -1,3 +1,7 @@
+/*
+	html.hpp
+	Copyright (C) c650, 2017
+*/
 #ifndef __HTML_HEADER
 #define __HTML_HEADER
 

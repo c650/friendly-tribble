@@ -1,3 +1,7 @@
+/*
+	base-element-object.cpp
+	Copyright (C) c650, 2017
+*/
 #include "./include/html.hpp"
 #include "./include/helpers.hpp"
 

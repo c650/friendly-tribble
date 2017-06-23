@@ -1,3 +1,7 @@
+/*
+	main.cpp
+	Copyright (C) c650, 2017
+*/
 #include "./src/include/html.hpp"
 #include <iostream>
 

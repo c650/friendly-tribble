@@ -1,3 +1,7 @@
+/*
+	debug.hpp
+	Copyright (C) c650, 2017
+*/
 #ifndef DEBUG_PRINTOUT_H
 #define DEBUG_PRINTOUT_H
 
