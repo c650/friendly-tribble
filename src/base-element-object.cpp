@@ -1,4 +1,5 @@
 #include "./include/html.hpp"
+#include "./include/helpers.hpp"
 
 #include <vector>
 #include <queue>
@@ -9,19 +10,19 @@
 
 namespace hp = HTMLParser;
 
-hp::BaseElementObject::~BaseElementObject() {
-	for (BaseElementObjectPointer& child : children) {
-		delete child;
-		child = nullptr;
-	}
-}
-
 /* this should throw some error when the HTML is invalid. */
 hp::BaseElementObject::BaseElementObject(const std::string& tag_name, const std::string& text)
 	: hp::BaseElementObject::BaseElementObject(tag_name, text, nullptr) {}
 
 hp::BaseElementObject::BaseElementObject(const std::string& _tag_name, const std::string& _text, BaseElementObjectPointer _parent)
 : tag_name(_tag_name), text(_text), parent(_parent) {}
+
+hp::BaseElementObject::~BaseElementObject() {
+	for (BaseElementObjectPointer& child : children) {
+		delete child;
+		child = nullptr;
+	}
+}
 
 std::vector<hp::BaseElementObjectPointer> hp::BaseElementObject::css(const std::string& pattern) const {
 	std::vector<BaseElementObjectPointer> results; /* all matches to pattern go here. */

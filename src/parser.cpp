@@ -13,6 +13,7 @@
 
 namespace hp = HTMLParser;
 
+/* TODO: change from std::string copies to iterators... */
 struct match_type {
 	size_t index, len;
 	std::string tag_name;
@@ -24,7 +25,8 @@ struct match_type {
 template<class BidirIt>
 static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, bool is_beginning_tag);
 
-static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end);
+static std::vector<hp::BaseElementObjectPointer>
+process_tags(const std::string& raw_html, std::vector<match_type>::iterator begin, std::vector<match_type>::iterator end);
 
 template<class BidirIt>
 static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first, BidirIt last);
@@ -44,7 +46,7 @@ hp::BaseElementObjectPointer hp::Document::parse_raw_html(const std::string& raw
 
 	std::sort(all.begin(), all.end(), [](const match_type& a, const match_type& b){return a.index < b.index;});
 	for (auto& m : all) {
-		std::cout << raw_html.substr(m.index, m.len) << '\n';
+		debug_print(raw_html.substr(m.index, m.len) + '\n');
 	}
 
 	return process_tags(raw_html, all.begin(), all.end()).front();
@@ -60,7 +62,14 @@ static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, bool i
 	std::vector<match_type> results;
 
 	general_regex_search(first, last, pattern, [is_beginning_tag, &results](const std::smatch& match, const size_t& offset){
-		results.push_back({ offset + match.prefix().length(), match.str().length(), match[1].str(), is_beginning_tag ? match[2].str() : "", is_beginning_tag, is_beginning_tag && match[2].str().back() == '/'});
+
+		results.push_back({ offset + match.prefix().length(),                    /* index */
+		                    match.str().length(),                                /* len */
+							match[1].str(),                                      /* tag_name */
+							is_beginning_tag ? match[2].str() : "",              /* attributes */
+							is_beginning_tag,                                    /* is_beginning_tag */
+							is_beginning_tag && match[2].str().back() == '/' }); /* is_lone_tag */
+
 		debug_print("Found tag: " + match.str() + " at: " + std::to_string(results.back().index) + '\n');
 		if (results.back().is_lone_tag)
 			debug_print("\tTag is a lone tag.\n");
