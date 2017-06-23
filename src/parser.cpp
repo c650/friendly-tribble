@@ -103,40 +103,51 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 		} else {
 			for (finish = start+1; finish != end; ++finish) {
 				if (finish->is_lone_tag) continue;
-				if (!finish->is_beginning_tag) {
-					--count;
-				} else {
+
+				if (finish->is_beginning_tag) {
 					++count;
+				} else {
+					--count;
 				}
-				if (count <= 0)
-					break;
+
+				if (count <= 0)	break; // TODO: test this way way more.
 			}
 		}
 
 		debug_print("start tag: " + start->tag_name + " and end tag: " + finish->tag_name + "\n");
 
-		// do math for start to finish of entire element and stuff within
+		// do math for length of text area within tags.
 		size_t length;
-		if (start != finish)
+		if (start != finish) {
 		 	length = finish->index - start->index - start->len;
-		else
+		} else {
 			length = 0;
+		}
 
 		debug_print("length = " + std::to_string(length) + '\n');
 
-		top_level_elements.push_back(new hp::BaseElementObject(start->tag_name, raw_html.substr(start->index + start->len, length)));
+		/* create the new element. */
+		hp::BaseElementObjectPointer element = new hp::BaseElementObject(start->tag_name, raw_html.substr(start->index + start->len, length));
 
 		/* scan attributes */
-		top_level_elements.back()->set_attributes(scan_attributes(raw_html.begin() + start->index, raw_html.begin() + start->index + start->len));
-
-		if (top_level_elements.back()->has_attribute("class")) {
-			debug_print("\thas class: " + (*top_level_elements.back())["class"] + '\n');
-		}
+		element->set_attributes(scan_attributes(raw_html.begin() + start->index, raw_html.begin() + start->index + start->len));
 
 		/* take care of element's children */
-		if (!start->is_lone_tag)
-			for (hp::BaseElementObjectPointer elem : process_tags(raw_html, start+1, finish))
-				top_level_elements.back()->add_child(elem);
+		if (!start->is_lone_tag) {
+			for (hp::BaseElementObjectPointer elem : process_tags(raw_html, start+1, finish)) {
+				element->add_child(elem);
+			}
+		}
+
+		if (element->has_attribute("class")) {
+			debug_print("\thas class: " + (*element)["class"] + '\n');
+		}
+
+		/*
+			add the new element to a std::vector of top-level elements.
+			NOTE: not necessarily "top-level", but same-level in all cases. Remember that this is DFS-ish.
+		*/
+		top_level_elements.push_back(element);
 
 		start = finish + 1;
 	}
