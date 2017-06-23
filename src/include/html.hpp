@@ -101,6 +101,23 @@ namespace HTMLParser {
 
 		void set_attributes(std::unordered_map<std::string,std::string>&& new_attrs);
 	};
+
+	/*
+		These are all the tags that are not allowed to or might not have closing tags.
+
+		They are called empty elements or (some of them) void elements, but you'll see
+		"lone_tag" in the source code.
+	*/
+	const std::vector<std::string> LONE_TAGS = {"link","meta","br","hr","base", "basefont", "br", "wbr", "source","img",
+	                                 "param","track","area","input","col","frame","embed","keygen"};
+
+	/*
+		function to check the LONE_TAGS above against some tag.
+
+		@param tag the string of tag to check (case insensitive)
+		@return true if the tag is in the LONE_TAGS list.
+	*/
+	bool check_lone_tags(std::string tag);
 }
 
 #endif

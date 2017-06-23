@@ -14,7 +14,11 @@
 #include <regex>
 #include <utility>
 
-#include <iostream>
+/* std::tolower */
+#include <cctype>
+
+/* std::transform */
+#include <algorithm>
 
 namespace hp = HTMLParser;
 
@@ -73,7 +77,9 @@ static std::vector<match_type> find_all_tags(BidirIt first, BidirIt last, bool i
 							match[1].str(),                                      /* tag_name */
 							is_beginning_tag ? match[2].str() : "",              /* attributes */
 							is_beginning_tag,                                    /* is_beginning_tag */
-							is_beginning_tag && match[2].str().back() == '/' }); /* is_lone_tag */
+							false /* 6/22/17 9:24PM -- eval below */ });         /* is_lone_tag */
+
+		results.back().is_lone_tag = is_beginning_tag && (match[2].str().back() == '/' || hp::check_lone_tags(results.back().tag_name));
 
 		debug_print("Found tag: " + match.str() + " at: " + std::to_string(results.back().index) + '\n');
 		if (results.back().is_lone_tag)
@@ -92,9 +98,7 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 	std::vector<hp::BaseElementObjectPointer> top_level_elements;
 
 	auto start = begin;
-	auto finish = end-1;
-
-	int count = 1;
+	auto finish = end;
 
 	while (start != end) {
 		if (!start->is_beginning_tag) {
@@ -102,22 +106,21 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 			continue;
 		}
 
-		/* don't need to find other tag if the tag is_lone_tag */
-		if (start->is_lone_tag) {
-			finish = start;
-		} else {
-			for (finish = start+1; finish != end; ++finish) {
-				if (finish->is_lone_tag) continue;
-
-				if (finish->is_beginning_tag) {
-					++count;
-				} else {
-					--count;
-				}
-
-				if (count <= 0)	break; // TODO: test this way way more.
+		int count = !start->is_lone_tag; /* if the tag is lone, count = 0 and loop never starts; otherwise, count is 1 */
+		finish = start;
+		while (count) {
+			if (++finish == end) {
+				throw hp::html_parse_error("Uneven tags or really crappy C++.");
 			}
+
+			if (finish->is_lone_tag) {
+				continue;
+			}
+
+			finish->is_beginning_tag ? ++count : --count;
 		}
+
+
 
 		debug_print("start tag: " + start->tag_name + " and end tag: " + finish->tag_name + "\n");
 
@@ -171,4 +174,12 @@ static std::unordered_map<std::string,std::string> scan_attributes(BidirIt first
 	});
 
 	return attributes;
+}
+
+bool hp::check_lone_tags(std::string tag) {
+	std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
+	for (auto& t : LONE_TAGS) {
+		if (tag == t) return true;
+	}
+	return false;
 }
