@@ -120,8 +120,6 @@ static std::vector<hp::BaseElementObjectPointer> process_tags(const std::string&
 			finish->is_beginning_tag ? ++count : --count;
 		}
 
-
-
 		debug_print("start tag: " + start->tag_name + " and end tag: " + finish->tag_name + "\n");
 
 		// do math for length of text area within tags.

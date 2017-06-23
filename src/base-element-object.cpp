@@ -29,9 +29,8 @@ hp::BaseElementObject::~BaseElementObject() {
 }
 
 std::vector<hp::BaseElementObjectPointer> hp::BaseElementObject::css(const std::string& pattern) const {
-	std::vector<BaseElementObjectPointer> results; /* all matches to pattern go here. */
 
-	// do all the stuff.
+	std::vector<BaseElementObjectPointer> results; /* all matches to pattern go here. */
 
 	return results;
 }
