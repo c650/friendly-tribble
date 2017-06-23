@@ -12,6 +12,12 @@
 #include <regex>
 #include <utility>
 
+/* std::transform */
+#include <algorithm>
+
+/* std::tolower */
+#include <cctype>
+
 namespace hp = HTMLParser;
 
 /* this should throw some error when the HTML is invalid. */
@@ -19,7 +25,9 @@ hp::Element::Element(const std::string& tag_name, const std::string& text)
 	: hp::Element::Element(tag_name, text, nullptr) {}
 
 hp::Element::Element(const std::string& _tag_name, const std::string& _text, ElementPointer _parent)
-: tag_name(_tag_name), text(_text), parent(_parent) {}
+: tag_name(_tag_name), text(_text), parent(_parent) {
+	std::transform(tag_name.begin(),tag_name.end(),tag_name.begin(), ::tolower);
+}
 
 hp::Element::~Element() {
 	for (ElementPointer& child : children) {
