@@ -7,6 +7,8 @@
 
 #include "./html.hpp"
 
+#include <vector>
+
 namespace CssSelection {
 	/*
 		Interface to outline basic selector matching.
@@ -18,6 +20,23 @@ namespace CssSelection {
 
 		virtual bool matches(const HTMLParser::Element* const element) const = 0;
 
+	};
+
+	/*
+		Groups selectors together.
+	*/
+	class SelectorGroup {
+		std::vector<BaseSelector*> selectors;
+
+	public:
+		SelectorGroup();
+		SelectorGroup(const std::string& str);
+
+		~SelectorGroup();
+
+		void add(BaseSelector* sel);
+
+		bool match(const HTMLParser::Element* const element) const;
 	};
 };
 #endif
