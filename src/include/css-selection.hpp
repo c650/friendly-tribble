@@ -38,5 +38,21 @@ namespace CssSelection {
 
 		bool match(const HTMLParser::Element* const element) const;
 	};
+
+	/*
+		parse_selector_substring will parse str into a selector group.
+
+		@param str the string to parse. Should look like "a.link-class[href="https://google.com/"]"
+		@param results a vector in which the results of parsing will be stored.
+	*/
+	void parse_selector_substring(const std::string& str, std::vector<BaseSelector*>& result);
+
+	/*
+		parse_selector_whole_string will parse str into a bunch of selector groups.
+
+		@param str the string to parse. Ex. "div.foo > div.bar, a.sauce[alt="foobar"]"
+		@param results a vector of SelectorGroups parsed out from str.
+	*/
+	void parse_selector_whole_string(const std::string& str, std::vector<SelectorGroup>& results);
 };
 #endif

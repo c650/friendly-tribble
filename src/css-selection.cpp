@@ -64,4 +64,29 @@ namespace CssSelection {
 			return yes;
 		}
 	};
+
+/*
+	SelectorGroup implementations.
+*/
+	SelectorGroup();
+	SelectorGroup(const std::string& str);
+
+	~SelectorGroup() {
+		for (auto& bs : selectors) {
+			delete bs;
+			bs = nullptr;
+		}
+	}
+
+	void add(BaseSelector* sel) {
+		selectors.push_back(sel);
+	}
+
+	bool match(const HTMLParser::Element* const element) const {
+		bool yes = true;
+		for (auto& bs : selectors) {
+			yes = yes && bs->match(element);
+		}
+		return yes;
+	}
 };
