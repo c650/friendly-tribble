@@ -36,13 +36,6 @@ hp::Element::~Element() {
 	}
 }
 
-std::vector<hp::ElementPointer> hp::Element::css(const std::string& pattern) const {
-
-	std::vector<ElementPointer> results; /* all matches to pattern go here. */
-
-	return results;
-}
-
 /* should allow access to attributes... */
 std::string&
 hp::Element::operator[](const std::string& attr) {

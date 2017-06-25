@@ -88,9 +88,6 @@ namespace HTMLParser {
 		Element operator/(const Element&) = delete;
 		/* += and other sugars shouldn't work with these guys disabled. */
 
-		/* This will return all child elements that meet the CSS pattern. */
-		std::vector<ElementPointer> css(const std::string& pattern) const;
-
 		void add_child(ElementPointer child);
 
 		void set_parent(ElementPointer parent);
