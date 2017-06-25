@@ -21,10 +21,9 @@ namespace CssSelection {
 	struct BaseSelector {
 
 		BaseSelector() {}
-		virtual ~BaseSelector() = 0;
+		virtual ~BaseSelector() {}
 
-		virtual bool matches(const HTMLParser::Element* const element) const = 0;
-
+		virtual bool match(const HTMLParser::Element* const element) const = 0;
 	};
 
 	/*
@@ -49,7 +48,7 @@ namespace CssSelection {
 			@param str the string to parse. Should look like "a.link-class[href="https://google.com/"]"
 			@param results a vector in which the results of parsing will be stored.
 		*/
-		void parse_selector_substring(const std::string& str, std::vector<BaseSelector*>& result);
+		void parse_selector_substring(const std::string& str);
 	};
 
 	/* this is where the real shit happens man. */

@@ -16,9 +16,9 @@ namespace hp = HTMLParser;
 
 hp::Document::Document(const std::string& raw_html) : Document(parse_raw_html(raw_html)) {}
 
-hp::Document::Document(ElementPointer _root) : root(_root) {}
+hp::Document::Document(hp::ElementPointer _root) : root(_root) {}
 
-std::vector<ElementPointer> css(const std::string& pattern) {
+std::vector<hp::ElementPointer> hp::Document::css(const std::string& pattern) {
 	CssSelection::SelectorQuery sq(pattern);
 	return sq.get_matches(this->root);
 }

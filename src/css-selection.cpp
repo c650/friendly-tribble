@@ -20,7 +20,7 @@
 
 namespace CssSelection {
 
-	class TagSelector : BaseSelector {
+	class TagSelector : public BaseSelector {
 		std::string tag_to_match;
 
 	public:
@@ -30,12 +30,12 @@ namespace CssSelection {
 		}
 		~TagSelector() {}
 
-		bool matches(const HTMLParser::Element* const element) const {
+		bool match(const HTMLParser::Element* const element) const {
 			return element->get_tag_name() == tag_to_match || tag_to_match == "*";
 		}
 	};
 
-	class ClassIDSelector : BaseSelector {
+	class ClassIDSelector : public BaseSelector {
 		std::string name; /* class or id without . or # */
 		bool is_class;
 
@@ -55,7 +55,7 @@ namespace CssSelection {
 
 		~ClassIDSelector() {}
 
-		bool matches(const HTMLParser::Element* const element) const {
+		bool match(const HTMLParser::Element* const element) const {
 			if (!element->has_attribute(is_class ? "class" : "id"))
 				return false;
 
@@ -103,8 +103,13 @@ namespace CssSelection {
 			this->selectors.push_back(new TagSelector(res.front()));
 		}
 
-		const static std::regex("(?=^|[^.#\\s]+|\\S*)([#.a-zA-Z0-9_]+)");
+		const static std::regex class_id_pattern("(?=^|[^.#\\s]+|\\S*)([#.a-zA-Z0-9_]+)");
+		res = general_regex_search(str.begin(),str.end(),class_id_pattern);
+		if (!res.empty()) {
+			this->selectors.push_back(new ClassIDSelector(res.front()));
+		}
 
+		// TODO: other attribute things.
 	}
 
 
@@ -113,7 +118,7 @@ namespace CssSelection {
 */
 	SelectorQuery::SelectorQuery(const std::string& query) {
 		const static std::regex pattern("[\\b\\s,>]+|[^\\b\\s,>]+");
-		std::vector<std::string> tmp = split_on_regex(str.begin(), str.end(), pattern);
+		std::vector<std::string> tmp = split_on_regex(query.begin(), query.end(), pattern);
 
 		for (size_t i = 0; i < tmp.size(); i += 2) {
 			this->selector_groups.push_back(SelectorGroup(tmp.at(i)));
@@ -129,5 +134,9 @@ namespace CssSelection {
 				throw css_parse_error("Something went wrong parsing the selector query.");
 			}
 		}
+	}
+
+	std::vector<HTMLParser::ElementPointer> SelectorQuery::get_matches(HTMLParser::ElementPointer root) {
+		/*if (root == nullptr)*/ return std::vector<HTMLParser::ElementPointer>(0);
 	}
 };
