@@ -22,13 +22,11 @@ namespace HTMLParser {
 	public:
 
 		Document(const std::string& raw_html);
+		Document(ElementPointer _root);
 
 
 		Document(Document& other) = delete;
 		Document& operator=(Document& other) = delete;
-
-	private:
-		Document(ElementPointer root);
 
 	protected:
 		friend Element;
