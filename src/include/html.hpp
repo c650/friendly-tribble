@@ -24,9 +24,10 @@ namespace HTMLParser {
 		Document(const std::string& raw_html);
 		Document(ElementPointer _root);
 
-
 		Document(Document& other) = delete;
 		Document& operator=(Document& other) = delete;
+
+		std::vector<ElementPointer> css(const std::string& pattern);
 
 	protected:
 		friend Element;
