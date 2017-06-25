@@ -12,8 +12,11 @@
 /* std::transform */
 #include <algorithm>
 
-/* std::tolower */
+/* std::tolower  */
 #include <cctype>
+
+/* std::regex    */
+#include <regex>
 
 namespace CssSelection {
 
@@ -28,7 +31,7 @@ namespace CssSelection {
 		~TagSelector() {}
 
 		bool matches(const HTMLParser::Element* const element) const {
-			return element->get_tag_name() == tag_to_match;
+			return element->get_tag_name() == tag_to_match || tag_to_match == "*";
 		}
 	};
 
@@ -68,25 +71,63 @@ namespace CssSelection {
 /*
 	SelectorGroup implementations.
 */
-	SelectorGroup();
-	SelectorGroup(const std::string& str);
+	SelectorGroup::SelectorGroup(const std::string& str) {
+		parse_selector_substring(str);
+	}
 
-	~SelectorGroup() {
+	SelectorGroup::~SelectorGroup() {
 		for (auto& bs : selectors) {
 			delete bs;
 			bs = nullptr;
 		}
 	}
 
-	void add(BaseSelector* sel) {
+	void SelectorGroup::add(BaseSelector* sel) {
 		selectors.push_back(sel);
 	}
 
-	bool match(const HTMLParser::Element* const element) const {
+	bool SelectorGroup::match(const HTMLParser::Element* const element) const {
 		bool yes = true;
 		for (auto& bs : selectors) {
 			yes = yes && bs->match(element);
 		}
 		return yes;
+	}
+
+	void SelectorGroup::parse_selector_substring(const std::string& str) {
+
+		/* Check for a tag */
+		const static std::regex tag_pattern("^([^.#\\s]+)(?=[.#\\[]|$)");
+		std::vector<std::string> res = general_regex_search(str.begin(),str.end(),tag_pattern);
+		if (!res.empty()) {
+			this->selectors.push_back(new TagSelector(res.front()));
+		}
+
+		const static std::regex("(?=^|[^.#\\s]+|\\S*)([#.a-zA-Z0-9_]+)");
+
+	}
+
+
+/*
+	SelectorQuery implementations.
+*/
+	SelectorQuery::SelectorQuery(const std::string& query) {
+		const static std::regex pattern("[\\b\\s,>]+|[^\\b\\s,>]+");
+		std::vector<std::string> tmp = split_on_regex(str.begin(), str.end(), pattern);
+
+		for (size_t i = 0; i < tmp.size(); i += 2) {
+			this->selector_groups.push_back(SelectorGroup(tmp.at(i)));
+		}
+		for (size_t i = 1; i < tmp.size(); i += 2) {
+			if (tmp.at(i).find(">") != std::string::npos) {
+				this->delimeters.push_back(Delims::DIRECT_DESCENDENT);
+			} else if (tmp.at(i).find(",") != std::string::npos) {
+				this->delimeters.push_back(Delims::BETWEEN_TWO_DIFF_PATTERNS);
+			} else if (tmp.at(i).find(" ") != std::string::npos) {
+				this->delimeters.push_back(Delims::A_DESCENDENT);
+			} else {
+				throw css_parse_error("Something went wrong parsing the selector query.");
+			}
+		}
 	}
 };
